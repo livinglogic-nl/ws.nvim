@@ -13,13 +13,9 @@ Most solutions depend on lua-rocks or interface for example with a built Rust li
 
 Neovim actually provides a TCP client so it should be possible in plain lua.
 
-## Scope
-- Only `ws://`. I think `wss://` is a lot harder, but im open for a PR as long as the solution remains pure lua.
-- Only ip addresses
-
 ## TODO
 - [ ] allow receiving in a message over multiple fragments
-- [ ] vim documentation
+- [ ] neovim documentation
 
 # Install
 Use your favourite package manager. For example
