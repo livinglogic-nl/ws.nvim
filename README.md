@@ -14,7 +14,7 @@ As Neovim actually provides a TCP client, it should not be too hard to implement
 
 ## TODO
 - [ ] allow receiving in a message over multiple fragments
-
+- [ ] vim documentation
 
 # Install
 Use your favourite package manager. For example
@@ -28,7 +28,7 @@ Plug 'livinglogic-nl/ws.nvim';
 
 local ws =  require('ws');
   ws.connect({
-    url = 'ws://localhost:9222/devtools/page/C722F...E1F3',
+    url = 'ws://127.0.01:9222/devtools/page/C722F...E1F3',
     onOpen = function(client)
       client.send(
         vim.fn.json_encode({
