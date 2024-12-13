@@ -1,20 +1,53 @@
-# nvim-plugin-template
+# ws.nvim
+Basic websocket support in neovim.
 
-Neovim plugin template; includes automatic documentation generation from README, integration tests with Busted, and linting with Stylua
+This can for example be used to communicate with Chrome using the devtools protocol.
+You would have to start Chrome with `--remote-debugging-port=9222` or some other port nr.
 
-## Usage
+## Why?
+I had trouble finding a simple solution that works.
+As Neovim actually provides a TCP client, it should not be too hard to implement.
 
-1. Click `use this template` button generate a repo on your github.
-2. Clone your plugin repo. Open terminal then cd plugin directory.
-3. Run `python3 rename.py your-plugin-name`. This will replace all `nvim-plugin-template` to your `plugin-name`. 
-   Then it will prompt you input `y` or `n` to remove example codes in `init.lua` and
-   `test/plugin_spec.lua`. If you are familiar this repo just input `y`. If you are looking at this template for the first time I suggest you inspect the contents. After this step `rename.py` will also auto-remove.
+## Scope
+- Only `ws://`. I think `wss://` is a lot harder, but im open for a PR as long as the solution remains pure lua.
+- Only ip addresses
 
-Now you have a clean plugin environment. Enjoy!
+## TODO
+- [ ] allow receiving in a message over multiple fragments
 
-## Format
 
-The CI uses `stylua` to format the code; customize the formatting by editing `.stylua.toml`.
+# Install
+Use your favourite package manager. For example
+
+```lua
+Plug 'livinglogic-nl/ws.nvim';
+```
+
+# Usage
+```lua
+
+local ws =  require('ws');
+  ws.connect({
+    url = 'ws://localhost:9222/devtools/page/C722F...E1F3',
+    onOpen = function(client)
+      client.send(
+        vim.fn.json_encode({
+          id = 1,
+          method = 'Runtime.evaluate',
+          params = {
+            expression = 'console.log(new Date)',
+          }
+        })
+      )
+    end,
+    onData = function(client, data)
+        local obj = vim.fn.json_decode(data);
+        client.close()
+    end,
+  })
+
+
+```
 
 ## Test
 
@@ -23,16 +56,5 @@ for your test cases. `vusted` is a wrapper of Busted especially for testing Neov
 
 Create test cases in the `test` folder. Busted expects files in this directory to be named `foo_spec.lua`, with `_spec` as a suffix before the `.lua` file extension. For more usage details please check
 [busted usage](https://lunarmodules.github.io/busted/)
-
-## CI
-
-- Auto generates doc from README.
-- Runs the Busted/vusted integration tests
-- Lints with `stylua`.
-
-
-## More
-
-To see this template in action, take a look at my other plugins.
 
 ## License MIT
