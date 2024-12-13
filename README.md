@@ -1,12 +1,17 @@
 # ws.nvim
-Basic websocket support in neovim.
+Basic websocket support in neovim. In only 124 lines of code 🎉
 
-This can for example be used to communicate with Chrome using the devtools protocol.
-You would have to start Chrome with `--remote-debugging-port=9222` or some other port nr.
+ws:// only for the moment... 🤷
+
+But can for example be used to communicate with Chrome using the devtools protocol.
+You would have to start Chrome with `--remote-debugging-port=9222` or some other port number.
 
 ## Why?
-I had trouble finding a simple solution that works.
-As Neovim actually provides a TCP client, it should not be too hard to implement.
+I had trouble finding a **simple** solution that works.
+
+Most solutions depend on lua-rocks or interface for example with a built Rust library.
+
+Neovim actually provides a TCP client so it should be possible in plain lua.
 
 ## Scope
 - Only `ws://`. I think `wss://` is a lot harder, but im open for a PR as long as the solution remains pure lua.
