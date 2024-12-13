@@ -1,7 +1,7 @@
 # ws.nvim
 Basic websocket support in neovim. In only 124 lines of code 🎉
 
-ws:// only for the moment... 🤷
+`ws://` only for the moment... 🤷
 
 But can for example be used to communicate with Chrome using the devtools protocol.
 You would have to start Chrome with `--remote-debugging-port=9222` or some other port number.
