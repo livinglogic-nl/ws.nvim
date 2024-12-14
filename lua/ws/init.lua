@@ -41,8 +41,8 @@ M.connect = function(params)
   tcp:read_start(function(_, chunk)
     vim.schedule(function()
       if handshakeComplete then
-        local result = chunk:sub(3);
-        params.onData(client, result);
+        local str = protocol.parseFrame(chunk)
+        params.onData(client, str);
         return
       end
       log('connected');

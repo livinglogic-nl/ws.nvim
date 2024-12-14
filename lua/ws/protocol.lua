@@ -64,7 +64,6 @@ M.maskedAndPayloadLength = function(isMasked, payloadLength)
 end
 
 M.mask = function(payload, key)
-  -- local bit = require('bit');
   local masked = '';
   for i=1,string.len(payload) do
     local char = payload:sub(i,i);
@@ -83,6 +82,50 @@ M.generateSendFrameMessage = function(payload)
     .. M.maskedAndPayloadLength(info.isMasked, string.len(payload))
     .. string.char(key[1], key[2], key[3], key[4])
     .. M.mask(payload, key)
+end
+
+M.getPayloadLengthAndOffset = function(msg)
+  local payloadLength = string.byte(msg, 2, 2);
+
+  if payloadLength < 126 then return payloadLength, 3 end
+  if payloadLength < 127 then
+    -- real length is in next 2 bytes
+    local big = string.byte(msg,3,3);
+    local small = string.byte(msg,4,4);
+    return (bit.lshift(big, 8) + small), 5
+  end
+
+  -- real length is in next 8 bytes
+  local sum = 0;
+  local shiftSize = 56;
+  for i=3,10 do
+    local b = string.byte(msg, i,i);
+    if b > 0 then
+      sum  = sum + bit.lshift(b, shiftSize);
+    end
+    shiftSize = shiftSize - 8;
+  end
+  return sum, 10
+end
+
+
+M.parseFrame = function(chunk)
+  local finReservedAndOpcode = string.byte(chunk, 1, 1);
+  local isFinal = bit.band(finReservedAndOpcode, bit.lshift(1, 7)) > 0;
+  if isFinal ~= true then
+    return error('fragmentation not supported');
+  end
+  local opCode = bit.band( finReservedAndOpcode, 0x7F );
+  if opCode ~= 1 then
+    return error('unsupported opcode: ' .. opCode)
+  end
+
+  local payloadLength, payloadOffset = M.getPayloadLengthAndOffset(chunk);
+  local chars = {}
+  for i=payloadOffset,payloadOffset+payloadLength-1 do
+    table.insert(chars, chunk:sub(i,i));
+  end
+  return table.concat(chars,'');
 end
 
 return M;
