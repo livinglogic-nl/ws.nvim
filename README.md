@@ -1,5 +1,5 @@
 # ws.nvim
-Basic websocket support in neovim. In only 124 lines of code 🎉
+Basic websocket support in neovim. In only 160 lines of code 🎉
 
 `ws://` only for the moment... 🤷
 

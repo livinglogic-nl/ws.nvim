@@ -96,3 +96,26 @@ describe('send frame protocol', function()
     assert.is_equal( protocol.mask('abcdefgh', { 0,0,0,1 }), 'abceefgi');
   end);
 end)
+
+describe('receive frame protocol', function()
+  it('correctly determines length and offset when length < 126', function ()
+    local message = string.char(129, 125);
+    local len,offset = protocol.getPayloadLengthAndOffset(message)
+    assert.is_equal(len, 125);
+    assert.is_equal(offset, 3);
+  end)
+
+  it('correctly determines length and offset when length < 65536', function ()
+    local message = string.char(129, 126, 0xFF, 0xFF);
+    local len,offset = protocol.getPayloadLengthAndOffset(message)
+    assert.is_equal(len, 65535);
+    assert.is_equal(offset, 5);
+  end)
+
+  it('correctly determines length and offset when length >= 65536', function ()
+    local message = string.char(129, 127, 0,0,0,0,0,1,0,0 );
+    local len,offset = protocol.getPayloadLengthAndOffset(message)
+    assert.is_equal(len, 65536);
+    assert.is_equal(offset, 10);
+  end)
+end)
