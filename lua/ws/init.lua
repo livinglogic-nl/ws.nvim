@@ -4,14 +4,6 @@ local protocol = require('ws.protocol');
 local M = {}
 
 M.connect = function(params)
-  local log = function() end
-
-  if params.silent == nil then
-    log = function(str)
-      print('ws.nvim: ' .. str);
-    end
-  end
-
   local domain, path = params.url:match('//([^/]*)(.+)');
   local ip, port = domain:match('([^:]+):([0-9]+)');
 
@@ -22,30 +14,39 @@ M.connect = function(params)
   local tcp = uv.new_tcp()
   client.tcp = tcp;
   client.send = function(payload)
-    tcp:write(protocol.generateSendFrameMessage(payload));
+    local key = protocol.generateKey();
+    local info = protocol.generateSendFrameInfo();
+    tcp:write(protocol.generateSendFrameMessage(payload, key, info));
   end
 
   client.close = function()
     tcp:close(function()
-      log('closed')
     end);
   end
 
   tcp:connect(ip, port, function (err)
     if err then
-      log('error' .. err);
+      vim.schedule_wrap(function()
+        vim.notify(err, vim.log.levels.ERROR);
+      end)
     end
-    log('closed');
   end)
 
+  local ctx = nil;
   tcp:read_start(function(_, chunk)
+    if chunk == nil then
+      client.close();
+      return
+    end
     vim.schedule(function()
       if handshakeComplete then
-        local str = protocol.parseFrame(chunk)
-        params.onData(client, str);
+        ctx = protocol.parseFrame(chunk, ctx)
+        if ctx.done then
+          params.onData(client, ctx.str);
+          ctx = nil;
+        end
         return
       end
-      log('connected');
       handshakeComplete = true;
       params.onOpen(client);
     end);

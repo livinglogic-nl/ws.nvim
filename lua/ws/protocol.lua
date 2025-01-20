@@ -27,14 +27,14 @@ end
 
 M.generateSendFrameInfo = function()
   return {
-    opcode = 1,
+    opCode = 1,
     isFinal = 1,
     isMasked = 1,
   }
 end
 
-M.finReservedAndOpcode = function(isFinal, opcode)
-   return string.char( bit.lshift(isFinal, 7) + opcode );
+M.finReservedAndOpCode = function(isFinal, opCode)
+   return string.char( bit.lshift(isFinal, 7) + opCode );
 end
 
 M.maskedAndPayloadLength = function(isMasked, payloadLength)
@@ -74,11 +74,9 @@ M.mask = function(payload, key)
   return masked
 end
 
-M.generateSendFrameMessage = function(payload)
-  local key = M.generateKey();
-  local info = M.generateSendFrameInfo();
+M.generateSendFrameMessage = function(payload, key, info)
   return
-    M.finReservedAndOpcode(info.isFinal, info.opcode)
+    M.finReservedAndOpCode(info.isFinal, info.opCode)
     .. M.maskedAndPayloadLength(info.isMasked, string.len(payload))
     .. string.char(key[1], key[2], key[3], key[4])
     .. M.mask(payload, key)
@@ -86,7 +84,6 @@ end
 
 M.getPayloadLengthAndOffset = function(msg)
   local payloadLength = string.byte(msg, 2, 2);
-
   if payloadLength < 126 then return payloadLength, 3 end
   if payloadLength < 127 then
     -- real length is in next 2 bytes
@@ -109,15 +106,12 @@ M.getPayloadLengthAndOffset = function(msg)
 end
 
 
-M.parseFrame = function(chunk)
-  local finReservedAndOpcode = string.byte(chunk, 1, 1);
-  local isFinal = bit.band(finReservedAndOpcode, bit.lshift(1, 7)) > 0;
-  if isFinal ~= true then
-    return error('fragmentation not supported');
-  end
-  local opCode = bit.band( finReservedAndOpcode, 0x7F );
-  if opCode ~= 1 then
-    return error('unsupported opcode: ' .. opCode)
+M.parseFrame = function(chunk, ctx)
+  local finReservedAndOpCode = string.byte(chunk, 1, 1);
+  local isFinal = bit.band(finReservedAndOpCode, bit.lshift(1, 7)) > 0;
+  local opCode = bit.band( finReservedAndOpCode, 0x7F );
+  if opCode > 1 then
+    return error('unsupported opCode: ' .. opCode)
   end
 
   local payloadLength, payloadOffset = M.getPayloadLengthAndOffset(chunk);
@@ -125,7 +119,17 @@ M.parseFrame = function(chunk)
   for i=payloadOffset,payloadOffset+payloadLength-1 do
     table.insert(chars, chunk:sub(i,i));
   end
-  return table.concat(chars,'');
+
+  local str = table.concat(chars,'')
+  if ctx then
+    opCode = ctx.opCode
+    str = ctx.str .. str
+  end
+  return {
+    opCode = opCode,
+    done = isFinal,
+    str = str,
+  }
 end
 
 return M;

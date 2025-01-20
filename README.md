@@ -14,7 +14,6 @@ Most solutions depend on lua-rocks or interface for example with a built Rust li
 Neovim actually provides a TCP client so it should be possible in plain lua.
 
 ## TODO
-- [ ] allow receiving in a message over multiple fragments
 - [ ] neovim documentation
 
 # Install
